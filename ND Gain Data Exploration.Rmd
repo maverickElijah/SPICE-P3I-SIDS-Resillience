@@ -1,0 +1,73 @@
+---
+title: "ND GAIN Data Exploration"
+author: "Maverick"
+date: "2023-06-13"
+output: html_document
+---
+
+Load Libraries 
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(here)# allows us to cut out long file paths (ex. "users/connor/dowloads/etc")
+library(tidyverse) # allows us to do lots of fundamental data science tasks (ex. read_csv)
+library(ggcorrplot) # allows us to make correlation plots
+library(plotly) # allows us to make ggplot objects interactive
+library(janitor) # allows us to clean the column names of our dataframe
+```
+Read in our Data
+```{r}
+nd_gain_data <- read_csv(here("data/nd-gain-data/joined_data/nd-gain-joined.csv"))
+```
+Round value column for two numbers after the decimal
+```{r}
+nd_gain_data$value <- round(nd_gain_data$value, digits = 2)
+```
+
+```{r}
+nd_gain_data_2020 <- nd_gain_data %>% 
+  filter(year == 2020)
+```
+
+```{r}
+nd_gain_data_2020_wider <- nd_gain_data_2020 %>% 
+  pivot_wider(names_from = indicator,
+              values_from = value)
+```
+
+```{r}
+ggplot(nd_gain_data_2020_wider, aes(x = rural_population,
+                                    y = child_malnutrition,
+                                    color = sids_context)) +
+  geom_point() + geom_smooth() +
+  labs(title = "Rural population and Child malnutrition, ND-GAIN 2020",
+       x = "% of people living in rural regions ",
+       y = "% of Under 5 year olds with malnutrition attributes") + theme_minimal()
+```
+
+
+
+Clean data to find SID islands in indicator of 'projected change of sea level rise'
+```{r}
+cleaned_data <- nd_gain_data %>%
+  select(Name, indicator, year,value, sids_context) %>%
+  filter(indicator == "projected_change_of_sea_level_rise_impacts") %>%
+  filter(sids_context == "sids")
+```
+
+Plot data in horizontal bar chart in descending order
+```{r}
+ggplot(cleaned_data, aes(x = fct_reorder(Name, value),
+                      y = value)) +
+  geom_col(fill = "#FF6666") +
+  coord_flip() +
+  labs(title = "Projected change in sea level rise (%)",
+       x = "SID ISLAND",
+       y = "VALUE")
+```
+
+
+
+
+
+
